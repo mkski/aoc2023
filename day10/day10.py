@@ -6,32 +6,37 @@ start = (s // l, s % (l+1))
 
 grid = inp.splitlines()
 
+UP = (-1, 0)
+DOWN = (1, 0)
+LEFT = (0, -1)
+RIGHT = (0, 1)
+
 # valid entries per pipe piece. we can "move" into the pipe if the move is valid
 # for that piece.
 # examples:
-#   moving down (1, 0) into "|" is valid
-#   moving left (0, -1) into "J" is invalid
+#   moving down DOWN into "|" is valid
+#   moving left LEFT into "J" is invalid
 entries = {
-    "-": [(0, 1), (0, -1)],
-    "|": [(-1, 0), (1, 0)],
-    "L": [(1, 0), (0, -1)],
-    "J": [(1, 0), (0, 1)],
-    "7": [(0, 1), (-1, 0)],
-    "F": [(0, -1), (-1, 0)],
+    "-": [RIGHT, LEFT],
+    "|": [UP, DOWN],
+    "L": [DOWN, LEFT],
+    "J": [DOWN, RIGHT],
+    "7": [RIGHT, UP],
+    "F": [LEFT, UP],
 }
 
 # valid exits per pipe piece. we can "exit" the pipe if the move is valid
 # for that piece.
 # examples:
-#   moving down (1, 0) out of "7" is valid
-#   moving down (1, 0) out of "L" is invalid
+#   moving down DOWN out of "7" is valid
+#   moving down DOWN out of "L" is invalid
 exits = {
-    "-": [(0, 1), (0, -1)],
-    "|": [(-1, 0), (1, 0)],
-    "L": [(0, 1), (-1, 0)],
-    "J": [(0, -1), (-1, 0)],
-    "7": [(0, -1), (1, 0)],
-    "F": [(0, 1), (1, 0)],
+    "-": [RIGHT, LEFT],
+    "|": [UP, DOWN],
+    "L": [RIGHT, UP],
+    "J": [LEFT, UP],
+    "7": [LEFT, DOWN],
+    "F": [RIGHT, DOWN],
 }
 
 
@@ -39,7 +44,7 @@ def get_neighbors(pos: tuple[int, int]):
     r, c = pos
     if grid[r][c] == "S":
         # consider all neighboring positions for the start node
-        neighbor_positions = [(-1, 0), (0, -1), (0, 1), (1, 0)]
+        neighbor_positions = [UP, LEFT, RIGHT, DOWN]
     else:
         # otherwise only consider valid exit nodes for the current position
         neighbor_positions = exits[grid[r][c]]
@@ -59,19 +64,18 @@ def get_neighbors(pos: tuple[int, int]):
 
 
 def get_loop(start: tuple[int, int]):
-    pos = start
     # build path in one direction from one of the starting neighbors
     # using two neighbors will build the path in multiple directions
-    queue = deque([get_neighbors(pos)[0]])
+    queue = deque([get_neighbors(start)[0]])
     # keep track of loop length at each node
-    seen = {pos: 0}
+    seen = {start: 0}
 
     # simple BFS search, quit when all valid neighbors have already been seen
     while queue:
-        pos = queue.popleft()
-        neighbors = get_neighbors(pos)
+        start = queue.popleft()
+        neighbors = get_neighbors(start)
         queue.extend([n for n in neighbors if n not in seen])
-        seen[pos] = len(seen)
+        seen[start] = len(seen)
 
         if all(n in seen for n in neighbors):
             return seen
